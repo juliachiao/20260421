@@ -1,5 +1,6 @@
 let capture;
 let pg;
+let hearts = []; // 用來儲存愛心泡泡的陣列
 
 function setup() {
   // 1. 產生一個全螢幕的畫布
@@ -44,9 +45,64 @@ function draw() {
   image(pg, x, y - 50);
   
   pop(); // 恢復原本的畫布設定
+
+  // 7. 產生與繪製愛心泡泡
+  // 每隔 10 個 frame 就產生一個新的愛心泡泡
+  if (frameCount % 10 === 0) {
+    hearts.push(new HeartBubble());
+  }
+
+  // 倒序迴圈更新與顯示愛心泡泡 (倒序是為了方便在陣列中安全地移除元素)
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    hearts[i].update();
+    hearts[i].display();
+
+    // 如果泡泡飄出螢幕上方，就將它從陣列中移除以節省效能
+    if (hearts[i].y < -100) {
+      hearts.splice(i, 1);
+    }
+  }
 }
 
 // 當視窗大小改變時，自動調整畫布大小以維持全螢幕
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+}
+
+// 定義愛心泡泡的類別
+class HeartBubble {
+  constructor() {
+    this.x = random(width);
+    this.y = height + random(50, 100); // 從畫面底部之外開始產生
+    this.size = random(15, 40); // 愛心大小
+    this.speedY = random(2, 5); // 上升速度
+    this.alpha = random(150, 255); // 隨機透明度
+    this.c = color(random(200, 255), random(50, 150), random(150, 200), this.alpha); // 隨機粉紫/紅色調
+    this.noiseOffsetX = random(1000); // 左右飄移的噪聲偏移量
+  }
+
+  update() {
+    this.y -= this.speedY; // 往上移動
+    this.x += map(noise(this.noiseOffsetX), 0, 1, -2, 2); // 利用 noise 讓泡泡左右自然飄移
+    this.noiseOffsetX += 0.01;
+  }
+
+  display() {
+    push();
+    translate(this.x, this.y);
+    fill(this.c);
+    noStroke();
+    
+    // 利用貝茲曲線繪製愛心
+    beginShape();
+    vertex(0, 0);
+    bezierVertex(-this.size / 2, -this.size / 2, -this.size, this.size / 3, 0, this.size);
+    bezierVertex(this.size, this.size / 3, this.size / 2, -this.size / 2, 0, 0);
+    endShape(CLOSE);
+    
+    // 在左上角加上半透明的白色高光，增加泡泡質感
+    fill(255, 150);
+    ellipse(-this.size / 4, this.size / 6, this.size / 4, this.size / 4);
+    pop();
+  }
 }
