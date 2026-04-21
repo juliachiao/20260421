@@ -1,4 +1,5 @@
 let capture;
+let pg;
 
 function setup() {
   // 1. 產生一個全螢幕的畫布
@@ -24,11 +25,24 @@ function draw() {
   let x = (width - imgW) / 2;
   let y = (height - imgH) / 2;
 
+  // 初始化或在視窗縮放時重設 createGraphics 的大小
+  if (!pg || pg.width !== imgW || pg.height !== imgH) {
+    pg = createGraphics(imgW, imgH);
+  }
+  
+  // 利用 pg 產生與 video 視訊一樣的內容
+  pg.image(capture, 0, 0, imgW, imgH);
+
   // 6. 將攝影機影像繪製在畫布中間 (使用 scale 進行水平翻轉以修正左右顛倒)
   push();
   translate(width, 0); // 將座標原點移至畫布右側
   scale(-1, 1);        // 水平翻轉畫布 X 軸
+  
   image(capture, x, y, imgW, imgH);
+  // 將 pg 畫面顯示在視訊畫面的上方 (這裡將 Y 座標向上偏移 50 像素方便觀察)
+  // 若您的「上方」是指圖層上層且完全重疊，請將 y - 50 改為 y
+  image(pg, x, y - 50);
+  
   pop(); // 恢復原本的畫布設定
 }
 
